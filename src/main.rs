@@ -36,7 +36,7 @@ macro_rules! pin {
 
 macro_rules! note {
     ($x:expr) => {
-        ($x / 44100.0 * 65536.0) as u16
+        ($x / 44000.0 * 65536.0) as u16
     };
 }
 
@@ -176,38 +176,38 @@ fn get_lead(i: usize, length: usize, leads: &mut [u16; 4]) -> u16 {
 
 fn get_second_lead(i: usize, length: usize, leads: &mut [u16; 4]) -> u16 {
     const NOTES: [u16; 32] = [
-        note!(130.81), //C3
-        note!(130.81),
-        note!(130.81),
-        note!(130.81),
-        note!(130.81),
-        note!(123.47), //B2
-        note!(130.81), //C3
-        note!(155.56), //Eb3
-        note!(155.56), //Eb3
-        note!(155.56), //Eb3
-        note!(155.56), //Eb3
-        note!(155.56), //Eb3
-        note!(155.56), //Eb3
-        note!(155.56), //Eb3
-        note!(155.56), //Eb3
-        note!(155.56), //Eb3
-        note!(174.61), //F3
-        note!(174.61), //F3
-        note!(174.61), //F3
-        note!(174.61), //F3
-        note!(174.61), //F3
-        note!(155.56), //Eb3
-        note!(174.61), //F3
-        note!(207.65), //Ab3
-        note!(207.65), //Ab3
-        note!(207.65), //Ab3
-        note!(207.65), //Ab3
-        note!(207.65), //Ab3
-        note!(196.00), //G3
-        note!(196.00), //G3
-        note!(196.00), //G3
-        note!(196.00), //G3
+        note!(0.0),
+        note!(0.0),
+        note!(196.00),
+        note!(0.0),
+        note!(0.0),
+        note!(196.00),
+        note!(0.0),
+        note!(0.0),
+        note!(0.0),
+        note!(0.0),
+        note!(196.00),
+        note!(0.0),
+        note!(196.00),
+        note!(174.61),
+        note!(196.00),
+        note!(0.0),
+        note!(0.0),
+        note!(0.0),
+        note!(196.00),
+        note!(0.0),
+        note!(0.0),
+        note!(196.00),
+        note!(0.0),
+        note!(0.0),
+        note!(0.0),
+        note!(0.0),
+        note!(196.00),
+        note!(0.0),
+        note!(196.00),
+        note!(207.65),
+        note!(196.00),
+        note!(0.0),
     ];
     let note = NOTES[i * 32 / length];
     let mut offset = -6;
