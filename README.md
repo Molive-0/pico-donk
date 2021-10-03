@@ -3,6 +3,9 @@
 some cool music, run in realtime on a pi pico.
 Made as part of the soton ecss 2021 nanohack, in about 8-9 hours (of which at least 3 hours was getting the toolchain compiling)
 
+To listen to the output, build a resistor DAC on gpio 0-15 to create a 16bit mono output.
+It will almost certainly need amplification.
+
 Based on the template at https://github.com/rp-rs/rp2040-project-template
 
 ## Requirements
