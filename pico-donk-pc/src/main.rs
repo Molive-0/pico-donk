@@ -49,9 +49,9 @@ fn main() -> ! {
         match std::io::stdin().read_line(&mut input_text) {
             Ok(_) => match input_text.trim().parse::<PicoSample>() {
                 Ok(sample) => {
-                    let first = ((sample.sin().to_num::<f64>() - 1.) * 2.) - 1.;
+                    let first = ((sample.cos().to_num::<f64>() - 1.) * 2.) - 1.;
                     let second = PicoSample::from_num(
-                        (sample.to_num::<f64>() * (std::f64::consts::PI * 2.)).sin(),
+                        (sample.to_num::<f64>() * (std::f64::consts::PI * 2.)).cos(),
                     )
                     .to_num::<f64>();
                     println!("{} vs {}, difference {}", first, second, second - first);

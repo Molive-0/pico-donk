@@ -36,7 +36,11 @@ fn main() {
         adjusted_fast_sin_tab_size,
     );
 
-    consts.add_value_raw("FP5", "Sample", &sample!(Sample::from_num(0.5)));
+    consts.add_value_raw("FP50", "Sample", &sample!(Sample::from_num(0.50)));
+    consts.add_value_raw("FP25", "Sample", &sample!(Sample::from_num(0.25)));
+    consts.add_value_raw("FP0", "Sample", &sample!(Sample::from_num(0.0)));
+    consts.add_value_raw("FP75", "Sample", &sample!(Sample::from_num(0.75)));
+    consts.add_value_raw("FP1", "Sample", &sample!(Sample::from_num(1.0)));
 
     consts.add_array_raw("FAST_SIN_TAB", "Sample", &fast_sin_tab);
 
