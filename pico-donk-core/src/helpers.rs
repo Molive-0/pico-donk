@@ -97,7 +97,7 @@ impl Mix for Half {
 }
 
 macro_rules! structs {
-    ($type: ident, $name: ident) => {
+    ($name: ident, $type: ident) => {
         pub struct $name {
             value: $type,
         }
@@ -115,49 +115,26 @@ macro_rules! structs {
     };
 }
 
-structs!(Half, Note);
-pub struct Freq {
-    value: Half,
-}
-pub struct Db {
-    value: Half,
-}
-pub struct EnvValue {
-    value: Sample,
-}
-pub struct Volume {
-    value: Sample,
-}
-pub struct Param {
-    value: Sample,
-}
-pub struct HalfParam {
-    value: Half,
-}
-pub struct Q {
-    value: Sample,
-}
-pub struct Resonance {
-    value: Sample,
-}
-pub struct Unisolo {
-    value: Half,
-}
-pub struct VibratoFreq {
-    value: Half,
-}
-pub struct Pan {
-    value: Sample,
-}
-pub struct Spread {
-    value: Sample,
-}
-pub struct VoiceMode {
-    value: Sample,
-}
+structs!(Note, Half);
+structs!(Freq, Half);
+structs!(Db, Half);
+structs!(EnvValue, Sample);
+structs!(Volume, Sample);
+structs!(Param, Sample);
+structs!(HalfParam, Half);
+structs!(Q, Sample);
+structs!(Resonance, Sample);
+structs!(Unisolo, Half);
+structs!(VibratoFreq, Half);
+structs!(Pan, Sample);
+structs!(Spread, Sample);
+structs!(VoiceMode, Sample);
 
 impl From<Note> for Freq {
-    fn from(n: Note) -> Self {
-        Freq::from_num(n)
+    fn from(note: Note) -> Self {
+        Freq {
+            value: Half::from_num(440)
+                * ((*note - Half::from_num(69)) / Half::from_num(12)).exp_2(),
+        }
     }
 }
