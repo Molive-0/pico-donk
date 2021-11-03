@@ -279,9 +279,9 @@ impl From<Param> for bool {
 impl From<bool> for Param {
     fn from(b: bool) -> Self {
         if b {
-            s!(1)
+            s!(1).into()
         } else {
-            s!(0)
+            s!(0).into()
         }
     }
 }
