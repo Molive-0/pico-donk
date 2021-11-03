@@ -1,5 +1,6 @@
 #![no_std]
 
+#[macro_use]
 pub mod cst;
 pub mod helpers;
 

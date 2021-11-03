@@ -1,7 +1,8 @@
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{ChannelCount, Sample, SampleRate};
+use pico_donk_core::cst::Half as PicoHalf;
 use pico_donk_core::cst::Sample as PicoSample;
-use pico_donk_core::helpers::SinCos;
+use pico_donk_core::helpers::{Exp2, SinCos};
 use pico_donk_core::Song;
 
 const CHANNELS: ChannelCount = 2;
@@ -47,13 +48,17 @@ fn main() -> ! {
     loop {
         let mut input_text = String::new();
         match std::io::stdin().read_line(&mut input_text) {
-            Ok(_) => match input_text.trim().parse::<PicoSample>() {
+            Ok(_) => match input_text.trim().parse::<PicoHalf>() {
                 Ok(sample) => {
                     let first = ((sample.cos().to_num::<f64>() - 1.) * 2.) - 1.;
-                    let second = PicoSample::from_num(
-                        (sample.to_num::<f64>() * (std::f64::consts::PI * 2.)).cos(),
+                    let second = PicoHalf::from_num(
+                        (sample.to_num::<f64>() * (std::f64::consts::TAU)).cos(),
                     )
                     .to_num::<f64>();
+                    println!("{} vs {}, difference {}", first, second, second - first);
+
+                    let first = sample.exp2().to_num::<f64>();
+                    let second = PicoHalf::from_num(sample.to_num::<f64>().exp2()).to_num::<f64>();
                     println!("{} vs {}, difference {}", first, second, second - first);
                 }
                 Err(e) => eprintln!("{}", e),

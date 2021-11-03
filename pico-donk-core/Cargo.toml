@@ -8,7 +8,9 @@ edition = "2021"
 
 [dependencies]
 build_const = { version = "*", default-features = false }
-fixed = "1"
+fixed = { version = "1" }
+fixed-macro = "1"
+fixed-sqrt = "0.2.4"
 
 [build-dependencies]
 build_const = { version = "*", default-features = true }
