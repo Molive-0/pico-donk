@@ -16,6 +16,7 @@ Based on the template at https://github.com/rp-rs/rp2040-project-template
 ## Installation of development dependencies
 ```
 rustup target install thumbv6m-none-eabi
+cargo install flip-link
 ```
 
 ## Running
