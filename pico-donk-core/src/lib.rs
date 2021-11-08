@@ -1,9 +1,7 @@
 #![no_std]
 #![feature(const_fn_floating_point_arithmetic)]
 #![feature(const_float_bits_conv)]
-#![feature(const_for)]
 #![feature(const_mut_refs)]
-#![feature(const_option)]
 
 #[macro_use]
 pub mod cst;
