@@ -1,4 +1,5 @@
 #![no_std]
+//we about to be doing some curse const
 #![feature(const_fn_floating_point_arithmetic)]
 #![feature(const_float_bits_conv)]
 #![feature(const_mut_refs)]
