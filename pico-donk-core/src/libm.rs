@@ -173,6 +173,8 @@ pub const fn k_cos(x: f64, y: f64) -> f64 {
  */
 
 use core::f64;
+#[cfg(not(debug_assertions))]
+use core::hint::unreachable_unchecked;
 
 const TOINT: f64 = 1. / f64::EPSILON;
 
@@ -933,7 +935,10 @@ pub const fn rem_pio2(x: f64) -> (i32, f64, f64) {
         0 => {
             n = rem_pio2_large(&[tx[0]], &mut ty, ((ix as i32) >> 20) - (0x3ff + 23), 1);
         }
+        #[cfg(debug_assertions)]
         _ => unreachable!(),
+        #[cfg(not(debug_assertions))]
+        _ => unsafe { unreachable_unchecked() },
     }
 
     if sign != 0 {

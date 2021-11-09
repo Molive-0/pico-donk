@@ -16,18 +16,24 @@ Based on the template at https://github.com/rp-rs/rp2040-project-template
 ## Installation of development dependencies
 ```
 rustup target install thumbv6m-none-eabi
+cargo install --git https://github.com/rp-rs/probe-run --branch rp2040-support
 cargo install flip-link
 ```
 
 ## Running
 
-For a debug build
+For a pc build
 ```
 cargo run
 ```
-For a release build
+For a pico build
 ```
-cargo run --release
+cargo run --target thumbv6m-none-eabi -p pico-donk-rp2040
+```
+To put onto a Pi Pico
+```
+arm-none-eabi-objcopy -O binary ./target/thumbv6m-none-eabi/debug/pico-donk-rp2040 ./target/picodonk.bin
+sudo picotool load -xv ./target/picodonk.bin
 ```
   
 ## License

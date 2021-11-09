@@ -12,7 +12,7 @@ mod libm;
 #[macro_export]
 macro_rules! note {
     ($x:expr) => {
-        ($x / 44100.0 * 65536.0) as u16
+        ($x / 48000.0 * 65536.0) as u16
     };
 }
 

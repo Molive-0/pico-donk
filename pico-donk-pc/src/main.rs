@@ -6,7 +6,7 @@ use pico_donk_core::helpers::{Exp2, SinCos};
 use pico_donk_core::Song;
 
 const CHANNELS: ChannelCount = 2;
-const SAMPLE_RATE: SampleRate = SampleRate { 0: 44100 };
+const SAMPLE_RATE: SampleRate = SampleRate { 0: 48000 };
 
 fn main() -> ! {
     let host = cpal::default_host();
