@@ -1,5 +1,5 @@
 [workspace]
-members = ["pico-donk-pc", "pico-donk-rp2040"]
+members = ["pico-donk-pc", "pico-donk-rp2040", "pico-donk-proc-macro"]
 default-members = ["pico-donk-pc"]
 
 # cargo build/run

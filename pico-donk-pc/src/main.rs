@@ -2,7 +2,7 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{ChannelCount, Sample, SampleRate};
 use pico_donk_core::cst::Half as PicoHalf;
 use pico_donk_core::cst::Sample as PicoSample;
-use pico_donk_core::helpers::{Exp2, SinCos};
+use pico_donk_core::helpers::{Exp, SinCos};
 use pico_donk_core::Song;
 
 const CHANNELS: ChannelCount = 2;

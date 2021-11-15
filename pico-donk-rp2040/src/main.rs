@@ -10,7 +10,7 @@ use cortex_m_rt::{entry, exception};
 use defmt::*;
 use defmt_rtt as _;
 use panic_probe as _;
-use pico_donk_core::Song;
+use pico_donk_core::{cst::Sample, Song};
 use rp2040_hal as hal;
 
 use hal::{clocks::init_clocks_and_plls, pac, watchdog::Watchdog};

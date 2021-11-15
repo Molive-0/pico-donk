@@ -1,13 +1,16 @@
 #![no_std]
-//we about to be doing some curse const
+//we about to be doing some cursed const
 #![feature(const_fn_floating_point_arithmetic)]
-#![feature(const_float_bits_conv)]
 #![feature(const_mut_refs)]
+#![feature(const_trait_impl)]
+#![feature(const_fn_trait_bound)]
 
 #[macro_use]
 pub mod cst;
+#[macro_use]
 pub mod helpers;
-mod libm;
+pub mod device;
+pub mod synth;
 
 #[macro_export]
 macro_rules! note {
@@ -17,19 +20,23 @@ macro_rules! note {
 }
 
 pub struct Song {
+    current_tempo: u32,
     i: usize,
     leads: [u16; 4],
     bass: u16,
     first: bool,
+    drums: &'static [u8],
 }
 
 impl Song {
     pub fn new() -> Song {
         Song {
+            current_tempo: 120,
             i: 0,
             leads: [0; 4],
             bass: 0,
             first: true,
+            drums: sampler_cache!(cst::DRUMS),
         }
     }
 
@@ -54,7 +61,7 @@ impl Song {
 
     fn get_drums(&mut self, i: usize, length: usize) -> u16 {
         let mut drums_vol = ((cst::DRUMS[(i * 4) % length] as u16)
-            + ((cst::DRUMS[(i * 4 + 1) % length] as u16) << 8))
+            + ((self.drums[(i * 4 + 1) % length] as u16) << 8))
             .wrapping_add(0x8000);
         if drums_vol > 50000 {
             drums_vol = ((drums_vol - 50000) / 32) + 50000;
