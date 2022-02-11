@@ -6,9 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-syn = "1"
+syn = { version = "1", features = ["visit-mut"] }
 quote = "1"
 fixed = "1"
+proc-macro2 = "*"
 
 [lib]
 proc-macro = true

@@ -1,15 +1,18 @@
+mod device;
+
 extern crate proc_macro;
 extern crate syn;
 #[macro_use]
 extern crate quote;
+
+use device::*;
 use fixed::types::I16F16;
 use fixed::types::I8F24;
 use proc_macro::TokenStream;
 use quote::ToTokens;
-use syn::Block;
-use syn::DeriveInput;
+use syn::visit::Visit;
+use syn::visit_mut::VisitMut;
 use syn::File;
-use syn::Ident;
 use syn::Item;
 
 type Sample = I8F24;
@@ -78,7 +81,33 @@ pub fn tables(_: TokenStream) -> TokenStream {
 
 #[proc_macro]
 pub fn device(input: TokenStream) -> TokenStream {
-    let ast: File = syn::parse(input.clone()).unwrap();
-    panic!("{:?}", ast);
-    input
+    let mut ast: File = syn::parse(input.clone()).unwrap();
+    //panic!("{:?}", ast);
+    let (parameters_name, device_name) = {
+        let mut ngv = NameGetVisitor::new();
+        ngv.visit_file(&ast);
+        ngv.find_device_name()
+    };
+    println!("Creating device {}", device_name);
+    let parameters = {
+        let mut pv = ParameterVisitor::new(parameters_name.clone());
+        pv.visit_file_mut(&mut ast);
+        pv.parameters
+    };
+    {
+        let mut dv = DeviceVisitor::new(device_name.clone(), parameters.len());
+        dv.visit_file_mut(&mut ast);
+    };
+    let name = device_name.to_string();
+    {
+        let mut iv = ImplVisitor::new(name, parameters_name, parameters);
+        iv.visit_file_mut(&mut ast);
+    };
+
+    ast.items
+        .push(Item::Verbatim(quote! {use crate::helpers::Parameter;}));
+    ast.items
+        .push(Item::Verbatim(quote! {use crate::device::Device;}));
+
+    ast.to_token_stream().into()
 }
