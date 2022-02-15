@@ -1,22 +1,18 @@
-use crate::cst::Sample;
-use crate::device::DeviceError;
-use crate::helpers::Freq;
-use pico_donk_proc_macro::device;
+use pico_donk_proc_macro::synth_device;
 
-device!(
-    #[derive(Copy, Clone, PartialEq, Eq)]
-    struct FalconParameters {
-        Test: Freq,
-    }
+synth_device!(
+#[derive(Copy, Clone)]
+struct FalconParameters {
+    Test: i32
+}
 
-    struct Falcon {}
+struct Falcon {}
 
-    impl Device for Falcon {
-        fn new() -> Falcon {
-            Falcon {_chunkData: Default::default()}
-        }
-        fn run(&self, song_position: u32, input: Sample) -> Result<Sample, DeviceError> {
-            Ok(s!(0))
-        }
-    }
+struct FalconVoice {}
+
+impl SynthDevice for Falcon {}
+
+impl Voice for FalconVoice {
+    fn note_off(&mut self) { }
+    fn run(&self, song_position: usize, buffer: &mut [Sample]) -> Result<usize, DeviceError> { Ok(0) }}
 );

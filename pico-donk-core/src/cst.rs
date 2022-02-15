@@ -1,7 +1,7 @@
 // constants
 use pico_donk_proc_macro::{tables, types};
 
-pub const SAMPLE_RATE: i32 = 48000;
+pub const SAMPLE_RATE: u32 = 48000;
 
 types!();
 tables!();

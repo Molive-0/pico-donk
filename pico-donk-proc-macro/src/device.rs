@@ -120,7 +120,7 @@ impl VisitMut for DeviceVisitor {
                 f.named.push(Field {
                     attrs: vec![],
                     vis: Visibility::Inherited,
-                    ident: Some(Ident::new("_chunkData", Span::call_site())),
+                    ident: Some(Ident::new("_chunk_data", Span::call_site())),
                     colon_token: Some(Colon {
                         spans: [Span::call_site()],
                     }),
@@ -212,7 +212,7 @@ impl VisitMut for ImplVisitor {
                         match ty {
                             #( #parameters_name::#idents => {
                                 let temp: #types = value.into();
-                                self._chunkData[loc] = temp.into();
+                                self._chunk_data[loc] = temp.into();
                             }, )*
                         }
                     }}));
@@ -221,10 +221,18 @@ impl VisitMut for ImplVisitor {
                         let loc = ty as usize;
                         match ty {
                             #( #parameters_name::#idents => {
-                                let temp: #types = self._chunkData[loc].into();
+                                let temp: #types = self._chunk_data[loc].into();
                                 temp.into()
                             }, )*
                         }
+                    }}));
+                    node.items.push(ImplItem::Verbatim(quote! {
+                    fn set_chunk(&mut self, chunk: [i32; #len]) {
+                        self._chunk_data = chunk;
+                    }}));
+                    node.items.push(ImplItem::Verbatim(quote! {
+                    fn get_chunk(&self) -> [i32; #len]{
+                        self._chunk_data
                     }}));
 
                     node.trait_
