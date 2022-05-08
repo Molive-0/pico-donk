@@ -3,7 +3,7 @@
 #![feature(const_fn_floating_point_arithmetic)]
 #![feature(const_mut_refs)]
 #![feature(const_trait_impl)]
-#![feature(const_fn_trait_bound)]
+#![feature(generic_const_exprs)]
 
 #[macro_use]
 pub mod cst;

@@ -7,8 +7,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-fixed = "1"
-fixed-macro = "1"
-fixed-sqrt = "0.2"
-typenum = "1"
+fixed = "2.0.0-alpha.2"
 pico-donk-proc-macro = { path = "../pico-donk-proc-macro" }

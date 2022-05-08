@@ -442,7 +442,7 @@ pub fn get_run() -> TokenStream {
                                             j-=1;
                                             if j < 1 {break;}
                                             let f = Sample::from_num(j) / (if *self.voices_unisono > 1 { *self.voices_unisono - 1 } else {1});
-                                            voice.note_on(e.note, e.velocity, (f * *self.voices_detune).into(), ((f - s!(0.5)) * (*self.voices_pan * s!(2) - s!(1)) + s!(0.5)).into());
+                                            voice.note_on(e.note, e.velocity, (f * *self.voices_detune).into(), ((f - sf!(0.5)) * (*self.voices_pan * s!(2) - s!(1)) + sf!(0.5)).into());
                                         }
                                     }
                                 },

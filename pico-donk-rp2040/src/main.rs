@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 #![feature(inline_const)]
+#![feature(generic_const_exprs)]
 
 use core::{
     hint::spin_loop,

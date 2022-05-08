@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 syn = { version = "1", features = ["visit-mut", "full", "visit"] }
 quote = "1"
-fixed = "1"
+fixed = "2.0.0-alpha.2"
 proc-macro2 = "*"
 
 [lib]

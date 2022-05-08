@@ -1,25 +1,30 @@
 use core::ops::{Deref, DerefMut};
 
-use fixed::{types::extra::LeEqU32, FixedI32};
-use fixed_sqrt::FixedSqrt;
+use fixed::FixedI32;
 
 use crate::cst::*;
 
 #[macro_export]
-macro_rules! s { ($($a:tt)+) => { fixed_macro::fixed!($($a)+: I8F24) } }
+macro_rules! s { ($($a:tt)+) => { Sample::from_bits(($($a)+) << 24) } }
 #[macro_export]
-macro_rules! h { ($($a:tt)+) => { fixed_macro::fixed!($($a)+: I16F16) } }
+macro_rules! h { ($($a:tt)+) => { Half::from_bits(($($a)+) << 16) } }
 #[macro_export]
-macro_rules! q { ($($a:tt)+) => { fixed_macro::fixed!($($a)+: I24F8) } }
+macro_rules! q { ($($a:tt)+) => { Quarter::from_bits(($($a)+) << 8) } }
+#[macro_export]
+macro_rules! sf { ($($a:tt)+) => { Sample::const_from_num($($a)+) } }
+#[macro_export]
+macro_rules! hf { ($($a:tt)+) => { Half::const_from_num($($a)+) } }
+#[macro_export]
+macro_rules! qf { ($($a:tt)+) => { Quarter::const_from_num($($a)+) } }
 
 pub trait ConstFromNum {
     fn const_from_num(x: f64) -> Self;
 }
 
-impl<T: LeEqU32> const ConstFromNum for FixedI32<T> {
+impl<const FRAC: i32> const ConstFromNum for FixedI32<FRAC> {
     #[inline]
     fn const_from_num(x: f64) -> Self {
-        Self::from_bits((x * (1 << Self::FRAC_NBITS) as f64) as i32)
+        Self::from_bits((x * (1 << FRAC) as f64) as i32)
     }
 }
 
@@ -29,7 +34,7 @@ pub trait Rand {
     fn rand() -> Self;
 }
 
-impl<T: LeEqU32> Rand for FixedI32<T> {
+impl<const FRAC: i32> Rand for FixedI32<FRAC> {
     #[inline]
     fn rand() -> Self {
         unsafe {
@@ -39,14 +44,66 @@ impl<T: LeEqU32> Rand for FixedI32<T> {
     }
 }
 
-pub trait MoliveDiv<S> {
-    fn molive_div(&self, x: FixedI32<S>) -> Self;
+pub trait FixedSqrt {
+    fn sqrt(&self) -> Self;
 }
 
-impl<T: LeEqU32, S: LeEqU32> const MoliveDiv<S> for FixedI32<T> {
+impl<const FRAC: i32> FixedSqrt for FixedI32<FRAC> {
+    fn sqrt(&self) -> Self {
+        if self.is_negative() {
+            panic!("fixed point square root of a negative number");
+        }
+        // because the msb of a non-negative number is zero, it is always safe
+        // to shift, but we need to compute the square root on the unsigned
+        // integer type
+        debug_assert_eq!(self.to_bits() & (1_i32).rotate_right(1), 0x0);
+        // NOTE: we compute on the unsigned integer type of the same size
+        // since the sign bit is zero we can shift into it
+        let bits = (self.to_bits() << 1) as u32;
+
+        let sqrt = {
+            // Compute bit, the largest power of 4 <= n
+
+            const MAX_SHIFT: u32 = u32::BITS - 1;
+            let shift: u32 = (MAX_SHIFT - bits.leading_zeros()) & !1;
+            let mut bit = 1 << shift;
+
+            // Algorithm based on the implementation in:
+
+            // https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Binary_numeral_system_(base_2)
+
+            // Note that result/bit are logically unsigned (even if T is signed).
+
+            let mut n = bits;
+            let mut result = 0;
+            while bit != 0 {
+                if n >= (result + bit) {
+                    n = n - (result + bit);
+                    result >>= 1;
+                    result += bit;
+                } else {
+                    result >>= 1;
+                }
+                bit >>= 2;
+            }
+            result
+        } << (FRAC / 2);
+        let n = FixedI32::<FRAC>::from_bits(sqrt as i32);
+        // NOTE: by excluding the case with zero integer bits, this assertion
+        // should never fail for non-zero even or odd fractional bits
+        debug_assert!(n.count_ones() == 0 || n.is_positive());
+        n
+    }
+}
+
+pub trait MoliveDiv<const FRAC: i32> {
+    fn molive_div(&self, x: FixedI32<FRAC>) -> Self;
+}
+
+impl<const FRAC1: i32, const FRAC2: i32> const MoliveDiv<FRAC2> for FixedI32<FRAC1> {
     #[inline]
-    fn molive_div(&self, x: FixedI32<S>) -> Self {
-        Self::from_bits((self.to_bits() / x.to_bits()) << (FixedI32::<S>::FRAC_NBITS))
+    fn molive_div(&self, x: FixedI32<FRAC2>) -> Self {
+        Self::from_bits((self.to_bits() / x.to_bits()) << (FRAC2))
     }
 }
 
@@ -57,9 +114,9 @@ where
     fn lookup(self, table: &[Self], table_log_size: usize) -> Self;
 }
 
-impl<T: LeEqU32> TableLookup for FixedI32<T> {
+impl<const FRAC: i32> TableLookup for FixedI32<FRAC> {
     fn lookup(self, table: &[Self], table_log_size: usize) -> Self {
-        let fract_bits: i32 = Self::FRAC_NBITS as i32 - table_log_size as i32;
+        let fract_bits: i32 = FRAC - table_log_size as i32;
         let fract_scale: i32 = 1 << fract_bits;
         let fract_mask: i32 = fract_scale - 1;
 
@@ -71,9 +128,9 @@ impl<T: LeEqU32> TableLookup for FixedI32<T> {
         let right = table[index + 1];
 
         let offset = right - left;
-        let offset = ((offset.to_bits() >> (16 - Self::INT_NBITS / 2))
-            * (fract_mix >> ((16 - Self::INT_NBITS / 2) - table_log_size as u32)))
-            << (Self::INT_NBITS % 2);
+        let offset = ((offset.to_bits() >> (16 - (32 - FRAC) / 2))
+            * (fract_mix >> ((16 - (32 - FRAC) / 2) - table_log_size as i32)))
+            << ((32 - FRAC) % 2);
         left + Self::from_bits(offset)
     }
 }
@@ -95,7 +152,7 @@ impl Exp for Sample {
     }
     #[inline]
     fn exp10(self) -> Self {
-        (self * s!(3.32192809489)).exp2()
+        (self * sf!(3.32192809489)).exp2()
     }
 }
 
@@ -110,14 +167,14 @@ impl Exp for Half {
         let offset = (Sample::wrapping_from_num(self)
             .lookup(&FAST_EXP_TAB, FAST_EXP_TAB_LOG2_SIZE)
             .to_bits()
-            >> (Sample::FRAC_NBITS as i32 - Half::FRAC_NBITS as i32 - shift).clamp(0, 31))
-            << (shift - (Sample::FRAC_NBITS as i32 - Half::FRAC_NBITS as i32)).clamp(0, 31);
+            >> (Sample::FRAC_BITS as i32 - Half::FRAC_BITS as i32 - shift).clamp(0, 31))
+            << (shift - (Sample::FRAC_BITS as i32 - Half::FRAC_BITS as i32)).clamp(0, 31);
 
         scale + Half::from_bits(offset)
     }
     #[inline]
     fn exp10(self) -> Self {
-        (self * h!(3.32192809489)).exp2()
+        (self * hf!(3.32192809489)).exp2()
     }
 }
 
@@ -130,7 +187,7 @@ pub trait SinCos {
 impl SinCos for Sample {
     #[inline]
     fn cos(self) -> Self {
-        self.wrapping_add(s!(0.25)).sin()
+        self.wrapping_add(sf!(0.25)).sin()
     }
     #[inline]
     fn sin(self) -> Self {
@@ -141,7 +198,7 @@ impl SinCos for Sample {
 impl SinCos for Half {
     #[inline]
     fn cos(self) -> Self {
-        self.wrapping_add(h!(0.25)).sin()
+        self.wrapping_add(hf!(0.25)).sin()
     }
     #[inline]
     fn sin(self) -> Self {
@@ -159,22 +216,22 @@ pub trait Squares {
 impl Squares for Sample {
     #[inline]
     fn square_135(self) -> Self {
-        self.sin() + ((self * s!(3)).sin() * s!(0.33333333333)) + ((self * s!(5)).sin() * s!(0.2))
+        self.sin() + ((self * s!(3)).sin() * sf!(0.33333333333)) + ((self * s!(5)).sin() * sf!(0.2))
     }
     #[inline]
     fn square_35(self) -> Self {
-        ((self * s!(3)).sin() * s!(0.33333333333)) + ((self * s!(5)).sin() * s!(0.2))
+        ((self * s!(3)).sin() * sf!(0.33333333333)) + ((self * s!(5)).sin() * sf!(0.2))
     }
 }
 
 impl Squares for Half {
     #[inline]
     fn square_135(self) -> Self {
-        self.sin() + ((self * h!(3)).sin() * h!(0.33333333333)) + ((self * h!(5)).sin() * h!(0.2))
+        self.sin() + ((self * h!(3)).sin() * hf!(0.33333333333)) + ((self * h!(5)).sin() * hf!(0.2))
     }
     #[inline]
     fn square_35(self) -> Self {
-        ((self * h!(3)).sin() * h!(0.33333333333)) + ((self * h!(5)).sin() * h!(0.2))
+        ((self * h!(3)).sin() * hf!(0.33333333333)) + ((self * h!(5)).sin() * hf!(0.2))
     }
 }
 
@@ -294,14 +351,14 @@ impl From<Note> for Freq {
 impl From<Freq> for Note {
     #[inline]
     fn from(freq: Freq) -> Self {
-        (((*freq * h!(0.00227272727273)).int_log2() * 12) + 69).into()
+        (((*freq * hf!(0.00227272727273)).int_log2() * 12) + 69).into()
     }
 }
 
 impl From<Db> for Half {
     #[inline]
     fn from(db: Db) -> Self {
-        (*db * h!(0.166666666667)).exp2()
+        (*db * hf!(0.166666666667)).exp2()
     }
 }
 
@@ -315,7 +372,7 @@ impl From<Half> for Db {
 impl From<EnvValue> for Sample {
     #[inline]
     fn from(ev: EnvValue) -> Self {
-        ((*ev - s!(1)) * s!(0.0002)).sqrt()
+        ((*ev - s!(1)) * sf!(0.0002)).sqrt()
     }
 }
 
@@ -338,7 +395,7 @@ impl From<Volume> for Sample {
 impl From<Sample> for Volume {
     #[inline]
     fn from(sample: Sample) -> Self {
-        (sample.sqrt() * s!(0.25)).into()
+        (sample.sqrt() * sf!(0.25)).into()
     }
 }
 
@@ -366,7 +423,7 @@ impl Parameter for Param {}
 impl From<Param> for bool {
     #[inline]
     fn from(p: Param) -> Self {
-        *p >= s!(0.5)
+        *p >= sf!(0.5)
     }
 }
 
@@ -393,7 +450,7 @@ impl From<Param> for Freq {
 impl From<Freq> for Param {
     #[inline]
     fn from(f: Freq) -> Self {
-        Sample::from_num((*f - h!(20)) * h!(0.0000500500500501))
+        Sample::from_num((*f - h!(20)) * hf!(0.0000500500500501))
             .sqrt()
             .into()
     }
@@ -403,8 +460,8 @@ impl From<Freq> for Param {
 impl From<Param> for Q {
     #[inline]
     fn from(p: Param) -> Self {
-        if *p < s!(0.5) {
-            (*p * s!(1.32) + s!(0.33)).into()
+        if *p < sf!(0.5) {
+            (*p * sf!(1.32) + sf!(0.33)).into()
         } else {
             (*p * s!(22) - s!(10)).into()
         }
@@ -415,9 +472,9 @@ impl From<Q> for Param {
     #[inline]
     fn from(q: Q) -> Self {
         if *q < s!(1) {
-            ((*q - s!(0.33)) * s!(0.757575757576)).into()
+            ((*q - sf!(0.33)) * sf!(0.757575757576)).into()
         } else {
-            ((*q + s!(10)) * s!(0.0454545454545)).into()
+            ((*q + s!(10)) * sf!(0.0454545454545)).into()
         }
     }
 }

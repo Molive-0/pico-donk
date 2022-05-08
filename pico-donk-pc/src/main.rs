@@ -1,3 +1,4 @@
+#![feature(generic_const_exprs)]
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{ChannelCount, Sample, SampleRate};
 use pico_donk_core::cst::Half as PicoHalf;

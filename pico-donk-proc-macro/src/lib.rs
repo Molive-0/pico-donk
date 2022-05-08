@@ -1,4 +1,5 @@
 #![feature(concat_idents)]
+#![feature(generic_const_exprs)]
 mod device;
 mod synth_device;
 
@@ -8,8 +9,7 @@ extern crate syn;
 extern crate quote;
 
 use device::*;
-use fixed::types::I16F16;
-use fixed::types::I8F24;
+use fixed::FixedI32;
 use proc_macro::TokenStream;
 use quote::ToTokens;
 use syn::visit::Visit;
@@ -18,18 +18,17 @@ use syn::File;
 use syn::Item;
 use synth_device::*;
 
-type Sample = I8F24;
-type Half = I16F16;
+type Sample = FixedI32<24>;
+type Half = FixedI32<16>;
+type Quarter = FixedI32<8>;
 
 #[proc_macro]
 pub fn types(_: TokenStream) -> TokenStream {
     TokenStream::from(quote! {
-    use fixed::types::I16F16;
-    use fixed::types::I8F24;
-    use fixed::types::I24F8;
-    pub type Sample = I8F24;
-    pub type Half = I16F16;
-    pub type Quarter = I24F8;
+    use fixed::FixedI32;
+    pub type Sample = FixedI32<24>;
+    pub type Half = FixedI32<16>;
+    pub type Quarter = FixedI32<8>;
     })
 }
 
