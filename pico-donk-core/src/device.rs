@@ -3,6 +3,7 @@ use core::fmt;
 use crate::cst::*;
 use crate::helpers::*;
 
+#[derive(Debug)]
 pub struct DeviceError {
     name: &'static str,
 }
@@ -78,13 +79,15 @@ pub trait Voice {
     fn set_vibrato_phase(&mut self, n: VibratoPhase);
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Debug, Default)]
 pub enum EventType {
+    #[default]
     None,
     NoteOn,
     NoteOff,
 }
 
+#[derive(Debug, Default)]
 pub struct Event {
     pub ty: EventType,
     pub delta_samples: usize,

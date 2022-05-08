@@ -417,67 +417,69 @@ impl VisitMut for SynthImplVisitor {
 pub fn get_run() -> TokenStream {
     quote! {
         fn run(&mut self, mut song_position: usize, buffer: &mut [Sample]) -> Result<usize, DeviceError>
-        {
-            let mut num_samples = buffer.len();
-            let mut position = 0;
+    {
+        let mut num_samples = buffer.len();
+        let mut position = 0;
 
-            while num_samples > 0
+        while num_samples > 0
+        {
+            let mut samples_to_next_event = num_samples;
+            for e in self.events.iter_mut()
             {
-                let mut samples_to_next_event = num_samples;
-                for e in self.events.iter()
+                if e.ty != EventType::None
                 {
-                    if e.ty != EventType::None
+                    if e.delta_samples == 0
                     {
-                        if e.delta_samples == 0
+                        match e.ty
                         {
-                            match e.ty
+                            EventType::NoteOn =>
                             {
-                                EventType::NoteOn =>
+                                let mut j = *self.voices_unisono;
+                                for voice in self.voices.iter_mut()
                                 {
-                                    let mut j = *self.voices_unisono;
-                                    for voice in self.voices.iter_mut()
+                                    if !voice.is_on()
                                     {
-                                        if !voice.is_on()
-                                        {
-                                            j-=1;
-                                            if j < 1 {break;}
-                                            let f = Sample::from_num(j) / (if *self.voices_unisono > 1 { *self.voices_unisono - 1 } else {1});
-                                            voice.note_on(e.note, e.velocity, (f * *self.voices_detune).into(), ((f - sf!(0.5)) * (*self.voices_pan * s!(2) - s!(1)) + sf!(0.5)).into());
-                                        }
+                                        j-=1;
+                                        let f = Sample::from_num(j) / (if *self.voices_unisono > 1 { *self.voices_unisono - 1 } else {1});
+                                        voice.note_on(e.note, e.velocity, (f * *self.voices_detune).into(), ((f - sf!(0.5)) * (*self.voices_pan * s!(2) - s!(1)) + sf!(0.5)).into());
                                     }
-                                },
-                                EventType::NoteOff =>
+                                    if j < 1 {break;}
+                                }
+                                e.ty = EventType::None;
+                            },
+                            EventType::NoteOff =>
+                            {
+                                for voice in self.voices.iter_mut()
                                 {
-                                    for voice in self.voices.iter_mut()
-                                    {
-                                        if voice.is_on() && voice.note == e.note {voice.note_off();}
-                                    }
-                                },
-                                EventType::None => {},
-                            }
-                        }
-                        else if e.delta_samples < samples_to_next_event
-                        {
-                            samples_to_next_event = e.delta_samples;
+                                    if voice.is_on() && voice.note == e.note {voice.note_off();}
+                                }
+                                e.ty = EventType::None;
+                            },
+                            EventType::None => {},
                         }
                     }
+                    else if e.delta_samples < samples_to_next_event
+                    {
+                        samples_to_next_event = e.delta_samples;
+                    }
                 }
-
-                let output = &mut buffer[position..(samples_to_next_event-position)];
-
-                for voice in self.voices.iter_mut()
-                {
-                    if voice.is_on() {voice.run(song_position, output)?;}
-                }
-                for event in self.events.iter_mut()
-                {
-                    if event.ty != EventType::None {event.delta_samples -= samples_to_next_event;}
-                }
-                song_position += samples_to_next_event / (crate::cst::SAMPLE_RATE as usize);
-                position += samples_to_next_event;
-                num_samples -= samples_to_next_event;
             }
-            Ok(song_position)
+
+            let output = &mut buffer[position..(samples_to_next_event+position)];
+
+            for voice in self.voices.iter_mut()
+            {
+                if voice.is_on() {voice.run(song_position, output)?;}
+            }
+            for event in self.events.iter_mut()
+            {
+                if event.ty != EventType::None {event.delta_samples -= samples_to_next_event;}
+            }
+            song_position += samples_to_next_event / (crate::cst::SAMPLE_RATE as usize);
+            position += samples_to_next_event;
+            num_samples -= samples_to_next_event;
         }
+        Ok(song_position)
+    }
     }
 }

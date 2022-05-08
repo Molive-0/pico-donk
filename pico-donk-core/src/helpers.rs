@@ -237,7 +237,7 @@ impl Squares for Half {
 
 macro_rules! structs {
     ($name: ident, $type: ty) => {
-        #[derive(Clone, Copy, Eq, PartialEq)]
+        #[derive(Clone, Copy, Eq, PartialEq, Default, Debug)]
         pub struct $name {
             value: $type,
         }
@@ -315,7 +315,7 @@ self_convert!(Spread, Sample);
 self_convert!(Detune, Sample);
 self_convert!(SlideTime, Quarter);
 
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub struct Unisono {
     value: i32,
 }
@@ -330,6 +330,11 @@ impl const DerefMut for Unisono {
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.value
+    }
+}
+impl const Default for Unisono {
+    fn default() -> Self {
+        Self { value: 1 }
     }
 }
 

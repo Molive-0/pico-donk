@@ -3,7 +3,10 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{ChannelCount, Sample, SampleRate};
 use pico_donk_core::cst::Half as PicoHalf;
 use pico_donk_core::cst::Sample as PicoSample;
+use pico_donk_core::device::Device;
+use pico_donk_core::device::SynthDevice;
 use pico_donk_core::helpers::{Exp, SinCos};
+use pico_donk_core::synth::falcon::Falcon;
 use pico_donk_core::Song;
 
 const CHANNELS: ChannelCount = 2;
@@ -43,6 +46,17 @@ fn main() -> ! {
             err_fn,
         )
         .expect("Unable to create stream");
+
+    let mut buffer = [Default::default(); 32];
+
+    let mut device: Falcon = Default::default();
+
+    device.run(0, &mut buffer).unwrap();
+
+    device.note_on(Default::default(), Default::default(), 16);
+    device.note_on(Default::default(), Default::default(), 18);
+
+    device.run(0, &mut buffer).unwrap();
 
     stream.play().expect("Unable to play stream");
 

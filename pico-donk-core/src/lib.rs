@@ -56,6 +56,7 @@ impl Song {
             self.leads = [0; 4];
             self.first = !self.first;
         }
+
         output
     }
 
