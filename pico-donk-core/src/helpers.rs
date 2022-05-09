@@ -301,6 +301,7 @@ structs!(Pan, Sample);
 structs!(Spread, Sample);
 structs!(Detune, Sample);
 structs!(SlideTime, Quarter);
+structs!(FalconEnvAmount, Sample);
 self_convert!(Note, Half);
 self_convert!(Freq, Half);
 self_convert!(Param, Sample);
@@ -314,6 +315,8 @@ self_convert!(Pan, Sample);
 self_convert!(Spread, Sample);
 self_convert!(Detune, Sample);
 self_convert!(SlideTime, Quarter);
+self_convert!(EnvValue, Sample);
+self_convert!(FalconEnvAmount, Sample);
 
 #[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub struct Unisono {
@@ -374,21 +377,6 @@ impl From<Half> for Db {
     }
 }
 
-impl From<EnvValue> for Sample {
-    #[inline]
-    fn from(ev: EnvValue) -> Self {
-        ((*ev - s!(1)) * sf!(0.0002)).sqrt()
-    }
-}
-
-impl From<Sample> for EnvValue {
-    #[inline]
-    fn from(sample: Sample) -> Self {
-        let half = Half::from_num(sample);
-        Sample::from_num(half * half * h!(5000) + h!(1)).into()
-    }
-}
-
 impl From<Volume> for Sample {
     #[inline]
     fn from(v: Volume) -> Self {
@@ -417,7 +405,11 @@ where
         + Into<SlideTime>
         + From<SlideTime>
         + Into<Note>
-        + From<Note>,
+        + From<Note>
+        + Into<EnvValue>
+        + From<EnvValue>
+        + Into<FalconEnvAmount>
+        + From<FalconEnvAmount>,
 {
 }
 
@@ -546,6 +538,35 @@ impl From<Note> for Param {
     }
 }
 
+impl From<EnvValue> for Param {
+    #[inline]
+    fn from(ev: EnvValue) -> Self {
+        ((*ev - s!(1)) * sf!(0.0002)).sqrt().into()
+    }
+}
+
+impl From<Param> for EnvValue {
+    #[inline]
+    fn from(sample: Param) -> Self {
+        let half = Half::from_num(*sample);
+        Sample::from_num(half * half * h!(5000) + h!(1)).into()
+    }
+}
+
+impl From<FalconEnvAmount> for Param {
+    #[inline]
+    fn from(ev: FalconEnvAmount) -> Self {
+        ((*ev * sf!(1.0 / (36.0 * 2.0))) + sf!(0.5)).into()
+    }
+}
+
+impl From<Param> for FalconEnvAmount {
+    #[inline]
+    fn from(sample: Param) -> Self {
+        ((*sample - sf!(0.5)) * s!(36 * 2)).into()
+    }
+}
+
 // Use an uncached version of a slice if we're working on arm
 macro_rules! sampler_cache {
     ($x:expr) => {{
@@ -559,4 +580,23 @@ macro_rules! sampler_cache {
         #[cfg(not(target_arch = "arm"))]
         $x
     }};
+}
+
+macro_rules! value {
+    ($self:ident, $x:ident) => {
+        $self._chunk_data[$x as usize]
+    };
+}
+
+macro_rules! defaults {
+    ($self:ident) => {
+        $self.voices_unisono = 1.into();
+        $self.voices_detune = 0.into();
+        $self.voices_pan = sf!(0.5).into();
+        $self.vibrato_freq = {
+            let s: Param = s!(0).into();
+            s.into()
+        };
+        $self.vibrato_amount = 0.into();
+    };
 }
