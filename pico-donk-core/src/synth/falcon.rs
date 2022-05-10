@@ -3,77 +3,79 @@ use pico_donk_proc_macro::synth_device;
 synth_device!(
 #[derive(Copy, Clone)]
 pub struct FalconParameters {
-    Osc1Waveform: Sample,
-    Osc1RatioCoarse: Sample,
-    Osc1RatioFine: Sample,
-    Osc1Feedback: Sample,
-    Osc1FeedForward: Sample,
+    Osc1Waveform: Param,
+    Osc1RatioCoarse: Param,
+    Osc1RatioFine: Param,
+    Osc1Feedback: Param,
+    Osc1FeedForward: Param,
 
     Osc1Attack: EnvValue,
     Osc1Decay: EnvValue,
-    Osc1Sustain: Sample,
+    Osc1Sustain: Param,
     Osc1Release: EnvValue,
 
-    Osc2Waveform: Sample,
-    Osc2RatioCoarse: Sample,
-    Osc2RatioFine: Sample,
-    Osc2Feedback: Sample,
+    Osc2Waveform: Param,
+    Osc2RatioCoarse: Param,
+    Osc2RatioFine: Param,
+    Osc2Feedback: Param,
 
     Osc2Attack: EnvValue,
     Osc2Decay: EnvValue,
-    Osc2Sustain: Sample,
+    Osc2Sustain: Param,
     Osc2Release: EnvValue,
 
-    MasterLevel: Sample,
+    MasterLevel: Param,
 
     PitchAttack: EnvValue,
     PitchDecay: EnvValue,
-    PitchSustain: Sample,
+    PitchSustain: Param,
     PitchRelease: EnvValue,
     PitchEnvAmt1: FalconEnvAmount,
     PitchEnvAmt2: FalconEnvAmount,
 }
 
 #[derive(Debug, Default)]
-pub struct Falcon {
+pub struct Falcon {}
+
+impl Falcon {
     fn new() -> Self {
         let mut falcon: Falcon = Default::default();
-        value!(falcon, Osc1Waveform) = s!(0).into();
-        value!(falcon, Osc1RatioCoarse) = s!(0).into();
-        value!(falcon, Osc1RatioFine) = sf!(0.5).into();
-        value!(falcon, Osc1Feedback) = s!(0).into();
-        value!(falcon, Osc1FeedForward) = s!(0).into();
+        value!(falcon, FalconParameters::Osc1Waveform) = s!(0).to_bits();
+        value!(falcon, FalconParameters::Osc1RatioCoarse) = s!(0).to_bits();
+        value!(falcon, FalconParameters::Osc1RatioFine) = sf!(0.5).to_bits();
+        value!(falcon, FalconParameters::Osc1Feedback) = s!(0).to_bits();
+        value!(falcon, FalconParameters::Osc1FeedForward) = s!(0).to_bits();
 
-        value!(falcon, Osc1Attack) = s!(1).into();
-        value!(falcon, Osc1Decay) = s!(1).into();
-        value!(falcon, Osc1Sustain) = s!(1).into();
-        value!(falcon, Osc1Release) = s!(1).into();
+        value!(falcon, FalconParameters::Osc1Attack) = s!(1).to_bits();
+        value!(falcon, FalconParameters::Osc1Decay) = s!(1).to_bits();
+        value!(falcon, FalconParameters::Osc1Sustain) = s!(1).to_bits();
+        value!(falcon, FalconParameters::Osc1Release) = s!(1).to_bits();
 
-        value!(falcon, Osc2Waveform) = s!(0).into();
-        value!(falcon, Osc2RatioCoarse) = s!(0).into();
-        value!(falcon, Osc2RatioFine) = sf!(0.5).into();
-        value!(falcon, Osc2Feedback) = s!(0).into();
+        value!(falcon, FalconParameters::Osc2Waveform) = s!(0).to_bits();
+        value!(falcon, FalconParameters::Osc2RatioCoarse) = s!(0).to_bits();
+        value!(falcon, FalconParameters::Osc2RatioFine) = sf!(0.5).to_bits();
+        value!(falcon, FalconParameters::Osc2Feedback) = s!(0).to_bits();
 
-        value!(falcon, Osc1Attack) = s!(1).into();
-        value!(falcon, Osc1Decay) = s!(5).into();
-        value!(falcon, Osc1Sustain) = sf!(0.75).into();
-        value!(falcon, Osc1Release) = sf!(1.5).into();
+        value!(falcon, FalconParameters::Osc1Attack) = s!(1).to_bits();
+        value!(falcon, FalconParameters::Osc1Decay) = s!(5).to_bits();
+        value!(falcon, FalconParameters::Osc1Sustain) = sf!(0.75).to_bits();
+        value!(falcon, FalconParameters::Osc1Release) = sf!(1.5).to_bits();
 
-        value!(falcon, MasterLevel) = sf!(.8).into();
+        value!(falcon, FalconParameters::MasterLevel) = sf!(0.8).to_bits();
 
-        value!(falcon, PitchAttack) = s!(1).into();
-        value!(falcon, PitchDecay) = s!(5).into();
-        value!(falcon, PitchSustain) = sf!(0.5).into();
-        value!(falcon, PitchRelease) = sf!(1.5).into();
-        value!(falcon, PitchEnvAmt1) = sf!(0).into();
-        value!(falcon, PitchEnvAmt2) = sf!(0).into();
+        value!(falcon, FalconParameters::PitchAttack) = s!(1).to_bits();
+        value!(falcon, FalconParameters::PitchDecay) = s!(5).to_bits();
+        value!(falcon, FalconParameters::PitchSustain) = sf!(0.5).to_bits();
+        value!(falcon, FalconParameters::PitchRelease) = sf!(1.5).to_bits();
+        value!(falcon, FalconParameters::PitchEnvAmt1) = s!(0).to_bits();
+        value!(falcon, FalconParameters::PitchEnvAmt2) = s!(0).to_bits();
+        defaults!(falcon);
         falcon
     }
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct FalconVoice {
-}
+pub struct FalconVoice {}
 
 impl SynthDevice for Falcon {}
 
