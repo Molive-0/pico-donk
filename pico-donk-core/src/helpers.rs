@@ -295,7 +295,7 @@ structs!(Param, Sample);
 structs!(HalfParam, Half);
 structs!(Q, Sample);
 structs!(Resonance, Sample);
-structs!(VibratoFreq, Half);
+structs!(VibratoFreq, Sample);
 structs!(VibratoPhase, Half);
 structs!(Pan, Sample);
 structs!(Spread, Sample);
@@ -308,8 +308,8 @@ self_convert!(Param, Sample);
 self_convert!(HalfParam, Half);
 self_convert!(Q, Sample);
 self_convert!(Resonance, Sample);
-//self_convert!(Unisono, i32);
-self_convert!(VibratoFreq, Half);
+self_convert!(Unisono, i32);
+self_convert!(VibratoFreq, Sample);
 self_convert!(VibratoPhase, Half);
 self_convert!(Pan, Sample);
 self_convert!(Spread, Sample);
@@ -409,7 +409,11 @@ where
         + Into<EnvValue>
         + From<EnvValue>
         + Into<FalconEnvAmount>
-        + From<FalconEnvAmount>,
+        + From<FalconEnvAmount>
+        + Into<Param>
+        + From<Param>
+        + Into<VibratoFreq>
+        + From<VibratoFreq>,
 {
 }
 
@@ -567,6 +571,21 @@ impl From<Param> for FalconEnvAmount {
     }
 }
 
+impl From<VibratoFreq> for Param {
+    #[inline]
+    fn from(vf: VibratoFreq) -> Self {
+        let d = ((*vf * sf!(1.0 / (70.0))) - sf!(0.1));
+        (if d >= s!(0) { d.sqrt() } else { s!(0) }).into()
+    }
+}
+
+impl From<Param> for VibratoFreq {
+    #[inline]
+    fn from(fr: Param) -> Self {
+        (((*fr * *fr) + sf!(0.1)) * s!(70)).into()
+    }
+}
+
 // Use an uncached version of a slice if we're working on arm
 macro_rules! sampler_cache {
     ($x:expr) => {{
@@ -583,7 +602,7 @@ macro_rules! sampler_cache {
 }
 
 macro_rules! value {
-    ($self:ident, $x:ident) => {
+    ($self:expr, $x:expr) => {
         $self._chunk_data[$x as usize]
     };
 }

@@ -10,6 +10,7 @@ pub mod cst;
 #[macro_use]
 pub mod helpers;
 pub mod device;
+pub mod envelope;
 pub mod synth;
 
 #[macro_export]

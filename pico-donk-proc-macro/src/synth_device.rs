@@ -5,9 +5,11 @@ use proc_macro2::Span;
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::punctuated::Punctuated;
+use syn::token::And;
 use syn::token::{Colon, Gt, Lt, Pub};
 use syn::visit::Visit;
 use syn::visit_mut::VisitMut;
+use syn::TypeReference;
 use syn::{
     visit, AngleBracketedGenericArguments, ExprLit, Field, Fields, GenericArgument, Ident,
     ImplItem, ItemImpl, ItemStruct, LitInt, PathArguments, Type, VisPublic, Visibility,
@@ -144,11 +146,15 @@ impl VisitMut for SynthDeviceVisitor {
 
 pub struct SynthVoiceVisitor {
     look_for: Ident,
+    parameters: Ident,
 }
 
 impl SynthVoiceVisitor {
-    pub fn new(look_for: Ident) -> SynthVoiceVisitor {
-        SynthVoiceVisitor { look_for }
+    pub fn new(look_for: Ident, parameters: Ident) -> SynthVoiceVisitor {
+        SynthVoiceVisitor {
+            look_for,
+            parameters,
+        }
     }
 }
 
@@ -167,6 +173,23 @@ impl VisitMut for SynthVoiceVisitor {
                 field!(f, "slide_samples", u32);
                 field!(f, "destination_note", Note);
                 field!(f, "current_note", Note);
+                let param = &self.parameters;
+                f.named.push(Field {
+                    attrs: vec![],
+                    vis: Visibility::Inherited,
+                    ident: Some(Ident::new("parameters", Span::call_site())),
+                    colon_token: Some(Colon {
+                        spans: [Span::call_site()],
+                    }),
+                    ty: Type::Reference(TypeReference {
+                        and_token: And {
+                            spans: [Span::call_site()],
+                        },
+                        lifetime: None,
+                        mutability: None,
+                        elem: Box::new(Type::Verbatim(quote! {#param})),
+                    }),
+                });
             } else {
                 panic!("Struct {} in wrong format", self.look_for);
             }

@@ -1,3 +1,4 @@
+use crate::envelope::Envelope;
 use pico_donk_proc_macro::synth_device;
 
 synth_device!(
@@ -75,11 +76,43 @@ impl Falcon {
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct FalconVoice {}
+pub struct FalconVoice {
+    osc1Env: Envelope,
+    osc2Env: Envelope,
+    pitchEnv: Envelope,
+
+    osc1Phase: Sample,
+    osc2Phase: Sample,
+
+    osc1Output: Sample,
+    osc2Output: Sample,
+}
 
 impl SynthDevice for Falcon {}
 
 impl Voice for FalconVoice {
+    fn note_on(&mut self) {
+        self.osc1Phase = Sample::rand();
+        self.osc2Phase = self.osc1Phase;
+        self.osc1Env.set_attack(Sample::from_bits(value!(self.parameters, FalconParameters::Osc1Attack)));
+        /*self.osc1Env.decay = falcon->osc1Decay;
+        self.osc1Env.Sustain = falcon->osc1Sustain;
+        self.osc1Env.Release = falcon->osc1Release;
+        self.osc1Env.Trigger();
+        self.osc2Env.Attack = falcon->osc2Attack;
+        self.osc2Env.Decay = falcon->osc2Decay;
+        self.osc2Env.Sustain = falcon->osc2Sustain;
+        self.osc2Env.Release = falcon->osc2Release;
+        self.osc2Env.Trigger();
+
+        self.pitchEnv.Attack = falcon->pitchAttack;
+        self.pitchEnv.Decay = falcon->pitchDecay;
+        self.pitchEnv.Sustain = falcon->pitchSustain;
+        self.pitchEnv.Release = falcon->pitchRelease;
+        self.pitchEnv.Trigger();
+
+        osc1Output = osc2Output = 0.0;*/
+    }
     fn note_off(&mut self) { }
     fn run(&self, song_position: usize, buffer: &mut [Sample]) -> Result<usize, DeviceError> {
         for i in buffer {

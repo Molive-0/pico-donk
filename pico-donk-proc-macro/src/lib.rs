@@ -137,7 +137,7 @@ pub fn synth_device(input: TokenStream) -> TokenStream {
         dv.visit_file_mut(&mut ast);
     };
     {
-        let mut vv = SynthVoiceVisitor::new(voice_name.clone());
+        let mut vv = SynthVoiceVisitor::new(voice_name.clone(), parameters_name.clone());
         vv.visit_file_mut(&mut ast);
     };
     let name = device_name.to_string();
